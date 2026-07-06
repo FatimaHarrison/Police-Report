@@ -1,0 +1,13 @@
+from fastapi import FastAPI
+from app.routers import reports
+
+app = FastAPI(
+    title="Police Reports",
+    version="1.0.0"
+)
+# Routers that is included 
+app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
+# Root Endpoint
+@app.get("/")
+def root():
+    return {"message": "API is running"}
