@@ -128,3 +128,12 @@ def delete_report(report_id: int):
     conn.close()
 
     return deleted
+def count_reports():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    total = cur.execute("SELECT COUNT(*) FROM reports").fetchone()[0]
+
+    conn.close()
+    return total
+

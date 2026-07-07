@@ -17,7 +17,10 @@ class Report(BaseModel):
 @router.get("/view", response_class=HTMLResponse)
 def view_reports(limit: int = 10, offset: int = 0):
     reports = crud.get_all_reports(limit=limit, offset=offset)
-
+    total = crud.count_reports() 
+    current_page = offset // limit + 1
+    total_pages = (total + limit - 1) // limit
+    
     html = """
     <html>
     <head>
@@ -27,7 +30,7 @@ def view_reports(limit: int = 10, offset: int = 0):
             .report { background: #A9C3D1; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
             .type { font-size: 20px; font-weight: bold; color: #37B320; margin-bottom: 10px;}
             .time { font-size: 15px; color: #134008; margin-top: 10px;}
-            .meta { color: #555; margin-top: 5px; }
+            .meta { color: #080B40; margin-top: 5px; font-family: Times New Roman;}
             .container { max-width: 900px; margin: center; }
             h1 { text-align: center; margin-bottom: 30px; color: #333; }
             
@@ -40,13 +43,37 @@ def view_reports(limit: int = 10, offset: int = 0):
     for r in reports:
         html += f"""
         <div class="report">
-            <div class="type">{r['type']}</div>S
+            <div class="type">{r['type']}</div>
             <div class="meta">Location: {r['location']}</div>
             <div class="meta">Description: {r['description']}</div>
             <div class="meta">Time: {r['created_at']}</div>
         </div>
         """
+    # Pagination buttons
+    html += '<div class="pagination">'
+    # First
+    first_offset = 0
+    html += f'<a href="/api/v1/reports/view?limit={limit}&offset={first_offset}">Beginning</a>'
+    # Previous page
+    prev_offset = max(0, offset - limit)
+    html += f'<a href="/api/v1/reports/view?limit={limit}&offset={prev_offset}">Back</a>'
 
+    # Show Page numbers
+    for page in range(1, total_pages + 1):
+        page_offset = (page - 1) * limit
+        class_name = "current" if page == current_page else ""
+        html += f'<a class="{class_name}" href="/api/v1/reports/view?limit={limit}&offset={page_offset}">{page}</a>'
+
+    # Next page
+    next_offset = offset + limit
+    if next_offset >= total:
+        html += f'<a class="disabled">Next</a>'
+    else:
+        html += f'<a href="/api/v1/reports/view?limit={limit}&offset={next_offset}">Foward</a>'
+
+    # All the way to the last page
+    last_offset = (total_pages - 1) * limit
+    html += f'<a href="/api/v1/reports/view?limit={limit}&offset={last_offset}">Last</a>'
     html += "</body></html>"
     return html
 
