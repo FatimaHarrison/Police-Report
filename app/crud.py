@@ -35,17 +35,22 @@ def create_report(report: ReportCreate):
     }
 
 
-def get_all_reports():
+def get_all_reports(limit: int = 10, offset: int = 0):
     conn = get_connection()
     cur = conn.cursor()
 
     rows = cur.execute(
-        "SELECT id, type, location, description, created_at FROM reports ORDER BY id DESC"
+        """
+        SELECT id, type, location, description, created_at
+        FROM reports
+        ORDER BY id DESC
+        LIMIT ? OFFSET ?
+        """,
+        (limit, offset)
     ).fetchall()
 
     conn.close()
 
-    # Convert rows to clean dicts
     return [
         {
             "id": row["id"],
@@ -56,6 +61,7 @@ def get_all_reports():
         }
         for row in rows
     ]
+
 
 
 def get_report_by_id(report_id: int):
@@ -110,7 +116,7 @@ def update_report(report_id: int, report: ReportCreate):
         "created_at": report.created_at
     }
 
-
+#Deleting reports
 def delete_report(report_id: int):
     conn = get_connection()
     cur = conn.cursor()
