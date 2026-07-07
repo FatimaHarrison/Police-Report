@@ -55,7 +55,7 @@ def view_reports(limit: int = 10, offset: int = 0):
 }
 
 .pagination .current {
-    background: #8E90AB;
+    background: #6B51B8;
     color: white;
     border-color: #007bff;
 }
