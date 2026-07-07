@@ -33,7 +33,40 @@ def view_reports(limit: int = 10, offset: int = 0):
             .meta { color: #080B40; margin-top: 5px; font-family: Times New Roman;}
             .container { max-width: 900px; margin: center; }
             h1 { text-align: center; margin-bottom: 30px; color: #333; }
-            
+            .pagination {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.pagination a {
+    display: inline-block;
+    padding: 8px 14px;
+    margin: 3px;
+    border: 1px solid #ccc;
+    background: #0F282E;
+    color: #333;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.pagination a:hover {
+    background: #6D8991;
+}
+
+.pagination .current {
+    background: #8E90AB;
+    color: white;
+    border-color: #007bff;
+}
+
+.pagination .disabled {
+    background: #e0e0e0;
+    color: #888;
+    border-color: #d0d0d0;
+    pointer-events: none;
+}
+
         </style>
     </head>
     <body>
@@ -75,6 +108,14 @@ def view_reports(limit: int = 10, offset: int = 0):
     last_offset = (total_pages - 1) * limit
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset={last_offset}">Last</a>'
     html += "</body></html>"
+
+    html += f'<a href="/api/v1/reports/view?limit={limit}&offset={first_offset}">First</a>'
+    html += f'<a href="/api/v1/reports/view?limit={limit}&offset={prev_offset}">Previous</a>'
+
+    class_name = "current" if page == current_page else ""
+    html += f'<a class="{class_name}" href="/api/v1/reports/view?limit={limit}&offset={page_offset}">{page}</a>'
+    html += '<a class="disabled">Next</a>'
+
     return html
 
 # Creating a new report
