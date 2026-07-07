@@ -84,37 +84,31 @@ def view_reports(limit: int = 10, offset: int = 0):
         """
     # Pagination buttons
     html += '<div class="pagination">'
+    
     # First
     first_offset = 0
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset={first_offset}">Beginning</a>'
     # Previous page
     prev_offset = max(0, offset - limit)
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset={prev_offset}">Back</a>'
-
     # Show Page numbers
     for page in range(1, total_pages + 1):
         page_offset = (page - 1) * limit
         class_name = "current" if page == current_page else ""
         html += f'<a class="{class_name}" href="/api/v1/reports/view?limit={limit}&offset={page_offset}">{page}</a>'
-
     # Next page
     next_offset = offset + limit
     if next_offset >= total:
         html += f'<a class="disabled">Next</a>'
     else:
         html += f'<a href="/api/v1/reports/view?limit={limit}&offset={next_offset}">Foward</a>'
-
     # All the way to the last page
     last_offset = (total_pages - 1) * limit
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset={last_offset}">Last</a>'
+    html += "</div>"  
     html += "</body></html>"
 
-    html += f'<a href="/api/v1/reports/view?limit={limit}&offset={first_offset}">First</a>'
-    html += f'<a href="/api/v1/reports/view?limit={limit}&offset={prev_offset}">Previous</a>'
-
-    class_name = "current" if page == current_page else ""
-    html += f'<a class="{class_name}" href="/api/v1/reports/view?limit={limit}&offset={page_offset}">{page}</a>'
-    html += '<a class="disabled">Next</a>'
+   
 
     return html
 
