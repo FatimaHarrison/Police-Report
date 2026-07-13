@@ -2,16 +2,9 @@ import sqlite3
 import requests
 from bs4 import BeautifulSoup
 import os
-from bs4 import XMLParsedAsHTMLWarning
-import warnings
+from app.database import get_connection
 
-warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
-DB_PATH = os.path.join(os.path.dirname(__file__), "police.db")
-
-def get_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+URL = "https://www.ocso.com/wp-admin/admin-ajax.php?action=get_active_calls"
 
 def report_exists(type, location, description, created_at):
     conn = get_connection()
@@ -26,6 +19,7 @@ def report_exists(type, location, description, created_at):
     conn.close()
     return exists is not None
 
+
 def insert_report(type, location, description, created_at):
     conn = get_connection()
     cur = conn.cursor()
@@ -38,26 +32,21 @@ def insert_report(type, location, description, created_at):
     conn.commit()
     conn.close()
 
-def scrape_ocso():
-    print("Using database:", DB_PATH)
 
-    url = "https://www.ocso.com/wp-admin/admin-ajax.php?action=get_active_calls"
+def scrape_ocso():
+    print("Scraper running...")
 
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        "User-Agent": "Mozilla/5.0"
     }
 
-    response = requests.get(url, headers=headers)
-
-    # The OCSO feed returns HTML inside JSON-like structure
+    response = requests.get(URL, headers=headers)
     raw = response.text.strip()
 
-    # Sometimes the feed returns "0" (WordPress failure)
     if raw == "0":
         print("OCSO returned empty response (0).")
         return
 
-    # Extract HTML table rows
     soup = BeautifulSoup(raw, "html.parser")
     rows = soup.find_all("tr")
 
@@ -69,10 +58,10 @@ def scrape_ocso():
         if len(cols) < 4:
             continue
 
+        created_at = cols[0].text.strip()
         type = cols[1].text.strip()
         location = cols[2].text.strip()
         description = cols[3].text.strip()
-        created_at = cols[0].text.strip()
 
         if report_exists(type, location, description, created_at):
             skipped += 1
@@ -81,7 +70,4 @@ def scrape_ocso():
         insert_report(type, location, description, created_at)
         inserted += 1
 
-    print(f"Inserted: {inserted}, Skipped duplicates: {skipped}")
-
-if __name__ == "__main__":
-    scrape_ocso()
+    print(f"Inserted: {inserted}, Skipped: {skipped}")
