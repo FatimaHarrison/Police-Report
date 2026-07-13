@@ -1,11 +1,27 @@
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
+
+# Routers
 from app.routers.reports import router as reports_router
+
+# Database connection (used by stats endpoints)
 from app.database import get_connection
 
 app = FastAPI()
 
+# Mount static folder for chart.html and charts.js
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# Include your reports router
 app.include_router(reports_router)
 
+# Homepage → redirect to reports page
+@app.get("/")
+def home():
+    return RedirectResponse(url="/api/v1/reports/view")
+
+# Incident counts for bar chart
 @app.get("/api/v1/reports/stats/incident-counts")
 def incident_counts():
     conn = get_connection()
@@ -23,6 +39,7 @@ def incident_counts():
 
     return [{"type": r["type"], "count": r["count"]} for r in rows]
 
+# Timeline for line chart
 @app.get("/api/v1/reports/stats/timeline")
 def timeline():
     conn = get_connection()
