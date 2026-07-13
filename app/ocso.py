@@ -4,6 +4,20 @@ from app.database import get_connection
 
 URL = "https://www.ocso.com/wp-admin/admin-ajax.php?action=get_active_calls"
 
+def report_exists(type, location, description, created_at):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id FROM reports
+        WHERE type = ? AND location = ? AND description = ? AND created_at = ?
+    """, (type, location, description, created_at))
+
+    exists = cur.fetchone()
+    conn.close()
+    return exists is not None
+
+
 def scrape_ocso():
     print("Scraper running...")
 
@@ -34,12 +48,7 @@ def scrape_ocso():
         location = cols[2].text.strip()
         description = cols[3].text.strip()
 
-        cur.execute("""
-            SELECT id FROM reports
-            WHERE type = ? AND location = ? AND description = ? AND created_at = ?
-        """, (type, location, description, created_at))
-
-        if cur.fetchone():
+        if report_exists(type, location, description, created_at):
             skipped += 1
             continue
 
