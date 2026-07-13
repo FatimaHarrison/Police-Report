@@ -3,6 +3,8 @@ from fastapi.responses import HTMLResponse
 from typing import List
 from pydantic import BaseModel
 from app import crud
+from app.database import get_connection
+
 
 router = APIRouter()
 
@@ -92,3 +94,37 @@ def view_reports(limit: int = 10, offset: int = 0):
     html += "</div></body></html>"
 
     return html
+@router.get("/stats/incident-counts")
+def incident_counts():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT type, COUNT(*) as count
+        FROM reports
+        GROUP BY type
+        ORDER BY count DESC
+    """)
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [{"type": r["type"], "count": r["count"]} for r in rows]
+
+
+@router.get("/stats/timeline")
+def timeline():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT created_at, COUNT(*) as count
+        FROM reports
+        GROUP BY created_at
+        ORDER BY created_at ASC
+    """)
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [{"time": r["created_at"], "count": r["count"]} for r in rows]

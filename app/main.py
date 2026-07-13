@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.routers import reports
 from app.database import create_tables
 from app.scheduler import start_scheduler
+from fastapi.staticfiles import StaticFiles
 
 
 app = FastAPI(
@@ -9,6 +10,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.mount("/", StaticFiles(directory="app/static", html=True), name="static")
 
 
 create_tables()
