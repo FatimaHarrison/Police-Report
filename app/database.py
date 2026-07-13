@@ -1,7 +1,7 @@
 import sqlite3
-import os
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "police.db")
+DB_PATH = "/opt/render/project/src/app/database.db"
+
 
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
