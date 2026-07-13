@@ -16,12 +16,11 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Database + scheduler
 create_tables()
-start_scheduler()
 
 # Reports router
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
 
-# Homepage → redirect to reports page
+# Homepage redirect to reports page
 @app.get("/")
 def root():
     return RedirectResponse(url="/api/v1/reports/view")

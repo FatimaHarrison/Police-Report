@@ -56,9 +56,25 @@ def view_reports(limit: int = 10, offset: int = 0):
         </style>
     </head>
     <body>
-        <h1>O-County Service Reports</h1>
+
+    <div style="text-align:center; margin-bottom:20px;">
+        <a href="/static/chart.html"
+           style="display:inline-block;
+                  padding:10px 20px;
+                  background:#ffc400;
+                  color:#000;
+                  text-decoration:none;
+                  border-radius:6px;
+                  font-weight:bold;
+                  font-family:Times New Roman;">
+            View Charts
+        </a>
+    </div>
+
+    <h1>O-County Service Reports</h1>
     """
 
+    # Render each report
     for r in reports:
         html += f"""
         <div class="report">
@@ -69,62 +85,38 @@ def view_reports(limit: int = 10, offset: int = 0):
         </div>
         """
 
+    # Pagination container
     html += '<div class="pagination">'
 
-    first_offset = 0
-    html += f'<a href="/api/v1/reports/view?limit={limit}&offset={first_offset}">Beginning</a>'
+    # Beginning button
+    html += f'<a href="/api/v1/reports/view?limit={limit}&offset=0">Beginning</a>'
 
+    # Back button
     prev_offset = max(0, offset - limit)
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset={prev_offset}">Back</a>'
 
-    for page in range(1, total_pages + 1):
+    # Limit visible page numbers to 6
+    max_pages = 6
+    end_page = min(total_pages, max_pages)
+
+    # Page number buttons
+    for page in range(1, end_page + 1):
         page_offset = (page - 1) * limit
         class_name = "current" if page == current_page else ""
         html += f'<a class="{class_name}" href="/api/v1/reports/view?limit={limit}&offset={page_offset}">{page}</a>'
 
+    # Forward button
     next_offset = offset + limit
     if next_offset >= total:
         html += f'<a class="disabled">Next</a>'
     else:
-        html += f'<a href="/api/v1/reports/view?limit={limit}&offset={next_offset}">Forward</a>'
+        html += f'<a href="/api/v1/reports/view?limit={limit}&offset={next_offset}">Next</a>'
 
+    # Last button
     last_offset = (total_pages - 1) * limit
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset={last_offset}">Last</a>'
 
+    # Close HTML
     html += "</div></body></html>"
 
     return html
-@router.get("/stats/incident-counts")
-def incident_counts():
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute("""
-        SELECT type, COUNT(*) as count
-        FROM reports
-        GROUP BY type
-        ORDER BY count DESC
-    """)
-
-    rows = cur.fetchall()
-    conn.close()
-
-    return [{"type": r["type"], "count": r["count"]} for r in rows]
-
-
-@router.get("/stats/timeline")
-def timeline():
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute("""
-        SELECT created_at, COUNT(*) as count
-        FROM reports
-        GROUP BY created_at
-        ORDER BY created_at ASC
-    """)
-
-    rows = cur.fetchall()
-    conn.close()
-
-    return [{"time": r["created_at"], "count": r["count"]} for r in rows]
