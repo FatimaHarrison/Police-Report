@@ -1,5 +1,6 @@
 from apscheduler.schedulers.background import BackgroundScheduler
-from app.ocso import main as run_ocso_scraper
+from app.ocso import scrape_ocso as run_ocso_scraper
+
 
 scheduler = BackgroundScheduler()
 
