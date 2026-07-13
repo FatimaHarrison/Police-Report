@@ -1,18 +1,23 @@
+// Load all charts using a date range
 async function loadCharts() {
-    const date = document.getElementById("dateInput").value;
+    const start = document.getElementById("startDate").value;
+    const end = document.getElementById("endDate").value;
 
-    if (!date) {
-        alert("Please select a date first.");
+    if (!start || !end) {
+        alert("Please select BOTH start and end dates.");
         return;
     }
 
-    loadIncidentChart(date);
-    loadTimelineChart(date);
+    loadIncidentChart(start, end);
+    loadTimelineChart(start, end);
 }
 
-// BAR CHART: Incident Counts
-async function loadIncidentChart(date) {
-    const response = await fetch(`/api/v1/reports/stats/incident-counts?date=${date}`);
+
+
+// BAR CHART: Incident Counts (Date Range)
+
+async function loadIncidentChart(start, end) {
+    const response = await fetch(`/api/v1/reports/stats/incident-range?start_date=${start}&end_date=${end}`);
     const data = await response.json();
 
     const labels = data.map(item => item.type);
@@ -42,11 +47,11 @@ async function loadIncidentChart(date) {
 }
 
 
-
-// LINE CHART: Calls Over Time
-
-async function loadTimelineChart(date) {
-    const response = await fetch(`/api/v1/reports/stats/timeline?date=${date}`);
+// -----------------------------------------------------
+// LINE CHART: Calls Over Time (Date Range)
+// -----------------------------------------------------
+async function loadTimelineChart(start, end) {
+    const response = await fetch(`/api/v1/reports/stats/timeline-range?start_date=${start}&end_date=${end}`);
     const data = await response.json();
 
     const labels = data.map(item => item.time);

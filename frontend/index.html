@@ -1,21 +1,87 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OCSO Charts</title>
+    <title>OCSO Charts Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+            margin: 20px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: #91ff00;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        canvas {
+            max-width: 800px;
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+
+        .date-range {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+    </style>
 </head>
+
 <body>
 
-<h2>Search by Date</h2>
-<input type="date" id="dateInput">
-<button onclick="loadCharts()">Load Charts</button>
+    <h1>O-County Service Report Dashboard</h1>
 
-<h2>Incident Counts (Bar Chart)</h2>
-<canvas id="incidentChart"></canvas>
+    <!-- Navigation Button -->
+    <button onclick="window.location.href='/'">
+        Back to Main Page
+    </button>
 
-<h2>Calls Over Time (Line Chart)</h2>
-<canvas id="timelineChart"></canvas>
+    <!-- Date Range Filter -->
+    <div class="date-range">
+        <h2>Select Date Range</h2>
 
-<script src="/frontend/charts.js"></script>
+        <label>Start Date:</label>
+        <input type="date" id="startDate">
+
+        <label>End Date:</label>
+        <input type="date" id="endDate">
+
+        <button onclick="loadCharts()">Load Charts</button>
+    </div>
+
+    <!-- Charts -->
+    <h2>Incident Counts (Bar Chart)</h2>
+    <canvas id="incidentChart"></canvas>
+
+    <h2>Calls Over Time (Line Chart)</h2>
+    <canvas id="timelineChart"></canvas>
+
+    <!-- JS -->
+    <script src="/frontend/charts.js"></script>
+
+    <!-- Auto-fill today's date -->
+    <script>
+        window.onload = () => {
+            const today = new Date().toISOString().split("T")[0];
+            document.getElementById("startDate").value = today;
+            document.getElementById("endDate").value = today;
+        };
+    </script>
+
 </body>
 </html>
