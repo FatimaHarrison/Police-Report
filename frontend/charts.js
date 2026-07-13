@@ -10,10 +10,7 @@ async function loadCharts() {
     loadTimelineChart(date);
 }
 
-
-// ---------------------------------------------
 // BAR CHART: Incident Counts
-// ---------------------------------------------
 async function loadIncidentChart(date) {
     const response = await fetch(`/api/v1/reports/stats/incident-counts?date=${date}`);
     const data = await response.json();
