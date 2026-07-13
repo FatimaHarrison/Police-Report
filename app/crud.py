@@ -2,6 +2,7 @@
 #to import a creating report. 
 import sqlite3
 from app.schemas import ReportCreate
+from app.database import get_connection
 
 # Method to use for to help the database. 
 def get_connection():
@@ -137,3 +138,58 @@ def count_reports():
     conn.close()
     return total
 
+# -----------------------------------------
+# CRUD: Get reports by a specific date
+# -----------------------------------------
+def get_reports_by_date(date: str):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, type, location, description, created_at
+        FROM reports
+        WHERE DATE(created_at) = DATE(?)
+        ORDER BY created_at DESC
+    """, (date,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [dict(r) for r in rows]
+
+# CRUD: Incident counts for bar chart
+def get_incident_counts(date: str):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT type, COUNT(*) AS count
+        FROM reports
+        WHERE DATE(created_at) = DATE(?)
+        GROUP BY type
+        ORDER BY count DESC
+    """, (date,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [dict(r) for r in rows]
+
+# CRUD: Timeline counts for line chart
+
+def get_timeline_counts(date: str):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT strftime('%H:%M', created_at) AS time, COUNT(*) AS count
+        FROM reports
+        WHERE DATE(created_at) = DATE(?)
+        GROUP BY time
+        ORDER BY time ASC
+    """, (date,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [dict(r) for r in rows]

@@ -4,6 +4,9 @@ from pydantic import BaseModel
 from app.schemas import ReportCreate
 from app import crud
 from fastapi.responses import HTMLResponse
+from app.database import get_connection
+from fastapi import Query
+
 router = APIRouter()
 
 # Pydantic Response Model
@@ -43,7 +46,7 @@ def view_reports(limit: int = 10, offset: int = 0):
     padding: 8px 14px;
     margin: 3px;
     border: 1px solid #ccc;
-    background: #0F282E;
+    background: #bd6846;
     color: #333;
     text-decoration: none;
     border-radius: 4px;
@@ -146,3 +149,67 @@ def delete_report_endpoint(report_id: int):
     if not deleted:
         raise HTTPException(status_code=404, detail="Report not found")
     return {"status": "deleted"}
+
+  # -----------------------------
+  # NEW: DATE FILTER ENDPOINT
+  # -----------------------------
+@router.get("/filter/date", response_model=List[Report])
+def filter_by_date(date: str = Query(..., description="Format: YYYY-MM-DD")):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, type, location, description, created_at
+        FROM reports
+        WHERE DATE(created_at) = DATE(?)
+        ORDER BY created_at DESC
+    """, (date,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [dict(r) for r in rows]
+
+
+   # -----------------------------
+   # NEW: BAR CHART DATA (incident counts)
+    # -----------------------------
+@router.get("/stats/incident-counts")
+def incident_counts(date: str):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT type, COUNT(*) AS count
+        FROM reports
+        WHERE DATE(created_at) = DATE(?)
+        GROUP BY type
+        ORDER BY count DESC
+    """, (date,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [dict(r) for r in rows]
+
+
+    # -----------------------------
+    # NEW: LINE CHART DATA (timeline)
+    # -----------------------------
+@router.get("/stats/timeline")
+def timeline(date: str):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT strftime('%H:%M', created_at) AS time, COUNT(*) AS count
+        FROM reports
+        WHERE DATE(created_at) = DATE(?)
+        GROUP BY time
+        ORDER BY time ASC
+    """, (date,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [dict(r) for r in rows]
