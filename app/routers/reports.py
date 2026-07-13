@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from app.schemas import ReportCreate
 from app import crud
 from fastapi.responses import HTMLResponse
-from app.database import get_connection
+from app.database import get_db as get_connection
 from fastapi import Query
 
 router = APIRouter()
