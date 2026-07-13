@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers.reports import router as reports_router
+from app.routers.reports import router as reports_router
 from app.database import get_connection
 
 app = FastAPI()
