@@ -1,6 +1,6 @@
 import sqlite3
 
-DB_PATH = "/opt/render/project/src/app/database.db"
+DB_PATH = "/opt/render/project/src/app/police.db"
 
 
 def get_connection():
