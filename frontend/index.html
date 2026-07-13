@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OCSO Charts</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h2>Search by Date</h2>
+<input type="date" id="dateInput">
+<button onclick="loadCharts()">Load Charts</button>
+
+<h2>Incident Counts (Bar Chart)</h2>
+<canvas id="incidentChart"></canvas>
+
+<h2>Calls Over Time (Line Chart)</h2>
+<canvas id="timelineChart"></canvas>
+
+<script src="charts.js"></script>
+</body>
+</html>
