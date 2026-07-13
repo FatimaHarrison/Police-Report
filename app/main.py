@@ -1,26 +1,41 @@
 from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
-from fastapi.staticfiles import StaticFiles
+from routers.reports import router as reports_router
+from app.database import get_connection
 
-from app.routers import reports
-from app.database import create_tables
-from app.scheduler import start_scheduler
+app = FastAPI()
 
-app = FastAPI(
-    title="O-County Service Report API",
-    version="1.0.0"
-)
+app.include_router(reports_router)
 
-# Static files served at /static instead of /
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+@app.get("/api/v1/reports/stats/incident-counts")
+def incident_counts():
+    conn = get_connection()
+    cur = conn.cursor()
 
-# Database + scheduler
-create_tables()
+    cur.execute("""
+        SELECT type, COUNT(*) AS count
+        FROM reports
+        GROUP BY type
+        ORDER BY count DESC
+    """)
 
-# Reports router
-app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
+    rows = cur.fetchall()
+    conn.close()
 
-# Homepage redirect to reports page
-@app.get("/")
-def root():
-    return RedirectResponse(url="/api/v1/reports/view")
+    return [{"type": r["type"], "count": r["count"]} for r in rows]
+
+@app.get("/api/v1/reports/stats/timeline")
+def timeline():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT created_at, COUNT(*) AS count
+        FROM reports
+        GROUP BY created_at
+        ORDER BY created_at ASC
+    """)
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [{"time": r["created_at"], "count": r["count"]} for r in rows]
