@@ -2,7 +2,7 @@ import requests
 from app.crud import insert_report
 from app.database import create_tables
 
-URL = "https://www.ocso.com/wp-admin/admin-ajax.php?action=get_active_calls"
+URL = "https://www.ocso.com/calls-for-service/"
 
 def scrape_ocso():
     print("Scraping OCSO (JSON API)...")
