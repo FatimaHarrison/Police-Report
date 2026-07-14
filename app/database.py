@@ -1,11 +1,10 @@
 import sqlite3
 
-DB_PATH = "police.db"   # your actual DB file
-
 def get_connection():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect("app/police.db")
     conn.row_factory = sqlite3.Row
     return conn
+
 
 def create_tables():
     conn = get_connection()

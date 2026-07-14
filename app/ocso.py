@@ -2,10 +2,7 @@ import sqlite3
 import requests
 from bs4 import BeautifulSoup
 import os
-from bs4 import XMLParsedAsHTMLWarning
-import warnings
 
-warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 DB_PATH = os.path.join(os.path.dirname(__file__), "police.db")
 
 def get_connection():
@@ -16,12 +13,10 @@ def get_connection():
 def report_exists(type, location, description, created_at):
     conn = get_connection()
     cur = conn.cursor()
-
     cur.execute("""
         SELECT id FROM reports
         WHERE type = ? AND location = ? AND description = ? AND created_at = ?
     """, (type, location, description, created_at))
-
     exists = cur.fetchone()
     conn.close()
     return exists is not None
@@ -29,12 +24,10 @@ def report_exists(type, location, description, created_at):
 def insert_report(type, location, description, created_at):
     conn = get_connection()
     cur = conn.cursor()
-
     cur.execute("""
         INSERT INTO reports (type, location, description, created_at)
         VALUES (?, ?, ?, ?)
     """, (type, location, description, created_at))
-
     conn.commit()
     conn.close()
 
@@ -42,37 +35,23 @@ def scrape_ocso():
     print("Using database:", DB_PATH)
 
     url = "https://www.ocso.com/wp-admin/admin-ajax.php?action=get_active_calls"
-
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-    }
+    headers = {"User-Agent": "Mozilla/5.0"}
 
     response = requests.get(url, headers=headers)
-
-    # The OCSO feed returns HTML inside JSON-like structure
     raw = response.text.strip()
 
-    # Sometimes the feed returns "0" (WordPress failure)
-    if raw == "0":
-        print("OCSO returned empty response (0).")
-        return
-
-    # Extract HTML table rows
+    # Parse XML using html.parser (works on all systems)
     soup = BeautifulSoup(raw, "html.parser")
-    rows = soup.find_all("tr")
+    calls = soup.find_all("call")  # XML tags become lowercase
 
     inserted = 0
     skipped = 0
 
-    for row in rows:
-        cols = row.find_all("td")
-        if len(cols) < 4:
-            continue
-
-        type = cols[1].text.strip()
-        location = cols[2].text.strip()
-        description = cols[3].text.strip()
-        created_at = cols[0].text.strip()
+    for call in calls:
+        created_at = call.find("entrytime").text.strip()
+        type = call.find("desc").text.strip()
+        location = call.find("location").text.strip()
+        description = type  # same field
 
         if report_exists(type, location, description, created_at):
             skipped += 1
