@@ -1,10 +1,8 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-
 # Routers
 from app.routers.reports import router as reports_router
-
 # Database connection (used by stats endpoints)
 from app.database import get_connection
 
@@ -56,3 +54,18 @@ def timeline():
     conn.close()
 
     return [{"time": r["created_at"], "count": r["count"]} for r in rows]
+@app.get("/debug-db")
+def debug_db():
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        tables = cur.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        ).fetchall()
+        rows = cur.execute(
+            "SELECT * FROM reports LIMIT 5"
+        ).fetchall()
+        return {"tables": tables, "rows": rows}
+    except Exception as e:
+        return {"error": str(e)}
+
