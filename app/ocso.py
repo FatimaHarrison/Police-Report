@@ -1,66 +1,97 @@
-import sqlite3
 import requests
 from bs4 import BeautifulSoup
-import os
+from app.database import get_connection
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "police.db")
 
-def get_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-def report_exists(type, location, description, created_at):
+def report_exists(incident_type, location, description, created_at):
     conn = get_connection()
     cur = conn.cursor()
+
     cur.execute("""
-        SELECT id FROM reports
-        WHERE type = ? AND location = ? AND description = ? AND created_at = ?
-    """, (type, location, description, created_at))
-    exists = cur.fetchone()
-    conn.close()
-    return exists is not None
+        SELECT id
+        FROM reports
+        WHERE type = ?
+          AND location = ?
+          AND description = ?
+          AND created_at = ?
+    """, (incident_type, location, description, created_at))
 
-def insert_report(type, location, description, created_at):
+    exists = cur.fetchone() is not None
+    conn.close()
+
+    return exists
+
+
+def insert_report(incident_type, location, description, created_at):
     conn = get_connection()
     cur = conn.cursor()
+
     cur.execute("""
         INSERT INTO reports (type, location, description, created_at)
         VALUES (?, ?, ?, ?)
-    """, (type, location, description, created_at))
+    """, (
+        incident_type,
+        location,
+        description,
+        created_at
+    ))
+
     conn.commit()
     conn.close()
 
+
 def scrape_ocso():
-    print("Using database:", DB_PATH)
-
     url = "https://www.ocso.com/wp-admin/admin-ajax.php?action=get_active_calls"
-    headers = {"User-Agent": "Mozilla/5.0"}
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
-    response = requests.get(url, headers=headers)
-    raw = response.text.strip()
+    try:
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        print(f"Error downloading active calls: {e}")
+        return
 
-    # Parse XML using html.parser (works on all systems)
-    soup = BeautifulSoup(raw, "html.parser")
-    calls = soup.find_all("call")  # XML tags become lowercase
+    soup = BeautifulSoup(response.text, "html.parser")
+    calls = soup.find_all("call")
 
     inserted = 0
     skipped = 0
 
     for call in calls:
-        created_at = call.find("entrytime").text.strip()
-        type = call.find("desc").text.strip()
-        location = call.find("location").text.strip()
-        description = type  # same field
+        entry = call.find("entrytime")
+        desc = call.find("desc")
+        loc = call.find("location")
 
-        if report_exists(type, location, description, created_at):
+        if not entry or not desc or not loc:
+            continue
+
+        created_at = entry.text.strip()
+        incident_type = desc.text.strip()
+        location = loc.text.strip()
+        description = incident_type
+
+        if report_exists(
+            incident_type,
+            location,
+            description,
+            created_at
+        ):
             skipped += 1
             continue
 
-        insert_report(type, location, description, created_at)
+        insert_report(
+            incident_type,
+            location,
+            description,
+            created_at
+        )
         inserted += 1
 
-    print(f"Inserted: {inserted}, Skipped duplicates: {skipped}")
+    print(f"Inserted: {inserted}")
+    print(f"Skipped duplicates: {skipped}")
+
 
 if __name__ == "__main__":
     scrape_ocso()
