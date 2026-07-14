@@ -16,9 +16,19 @@ async function loadIncidentChart() {
                 borderColor: "rgb(108, 54, 235)",
                 borderWidth: 1
             }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "top"
+                }
+            }
         }
     });
 }
+
 
 async function loadTimelineChart() {
     const response = await fetch("/api/v1/reports/stats/timeline");
@@ -39,9 +49,19 @@ async function loadTimelineChart() {
                 fill: true,
                 tension: 0.3
             }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "top"
+                }
+            }
         }
     });
 }
+
 
 loadIncidentChart();
 loadTimelineChart();

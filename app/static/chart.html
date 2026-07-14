@@ -2,14 +2,41 @@
 <html>
 <head>
     <title>Charts</title>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .chart-container {
+            width: 90%;
+            max-width: 700px;
+            height: 350px;
+            margin: 30px auto;
+        }
+
+        body {
+            font-family: "Times New Roman", serif;
+            background: #976019d8;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-family: Georgia, "Times New Roman", Times, serif;
+        }
+    </style>
 </head>
-<body style="background:#c4c57a93; padding:20px;">
 
-<h1 style="text-align:center; font-family: Georgia, 'Times New Roman', Times, serif;">Incident Charts</h1>
+<body>
 
-<canvas id="incidentChart" width="334" height="200"></canvas>
-<canvas id="timelineChart" width="334" height="200" style="margin-top:40px;"></canvas>
+<h1>Incident Charts</h1>
+
+<div class="chart-container">
+    <canvas id="incidentChart"></canvas>
+</div>
+
+<div class="chart-container">
+    <canvas id="timelineChart"></canvas>
+</div>
 
 <div style="text-align:center; margin:20px;">
     <a href="/api/v1/reports/view"
