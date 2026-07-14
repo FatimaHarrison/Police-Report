@@ -3,6 +3,7 @@
 import sqlite3
 from app.schemas import ReportCreate
 
+
 # Method to use for to help the database. 
 def get_connection():
     conn = sqlite3.connect("police.db")
@@ -34,7 +35,7 @@ def create_report(report: ReportCreate):
         "created_at": report.created_at
     }
 
-
+#Limited by 10
 def get_all_reports(limit: int = 10, offset: int = 0):
     conn = get_connection()
     cur = conn.cursor()
