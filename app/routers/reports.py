@@ -5,8 +5,7 @@ from pydantic import BaseModel
 from app import crud
 from app.database import get_connection
 
-
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/reports")
 
 class Report(BaseModel):
     id: int
@@ -74,7 +73,6 @@ def view_reports(limit: int = 10, offset: int = 0):
     <h1>O-County Service Reports</h1>
     """
 
-    # Render each report
     for r in reports:
         html += f"""
         <div class="report">
@@ -85,38 +83,30 @@ def view_reports(limit: int = 10, offset: int = 0):
         </div>
         """
 
-    # Pagination container
     html += '<div class="pagination">'
 
-    # Beginning button
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset=0">Beginning</a>'
 
-    # Back button
     prev_offset = max(0, offset - limit)
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset={prev_offset}">Back</a>'
 
-    # Limit visible page numbers to 6
     max_pages = 6
     end_page = min(total_pages, max_pages)
 
-    # Page number buttons
     for page in range(1, end_page + 1):
         page_offset = (page - 1) * limit
         class_name = "current" if page == current_page else ""
         html += f'<a class="{class_name}" href="/api/v1/reports/view?limit={limit}&offset={page_offset}">{page}</a>'
 
-    # Forward button
     next_offset = offset + limit
     if next_offset >= total:
         html += f'<a class="disabled">Next</a>'
     else:
         html += f'<a href="/api/v1/reports/view?limit={limit}&offset={next_offset}">Next</a>'
 
-    # Last button
     last_offset = (total_pages - 1) * limit
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset={last_offset}">Last</a>'
 
-    # Close HTML
     html += "</div></body></html>"
 
     return html

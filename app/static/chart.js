@@ -12,8 +12,8 @@ async function loadIncidentChart() {
             datasets: [{
                 label: "Incident Count",
                 data: counts,
-                backgroundColor: "rgba(235, 232, 54, 0.6)",
-                borderColor: "rgb(136, 235, 54)",
+                backgroundColor: "rgba(223, 13, 31, 0.6)",
+                borderColor: "rgb(108, 54, 235)",
                 borderWidth: 1
             }]
         }
@@ -34,7 +34,7 @@ async function loadTimelineChart() {
             datasets: [{
                 label: "Calls Over Time",
                 data: counts,
-                borderColor: "rgb(255, 187, 99)",
+                borderColor: "rgb(99, 255, 195)",
                 backgroundColor: "rgba(219, 99, 255, 0.51)",
                 fill: true,
                 tension: 0.3
