@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from app import crud
 from app.database import get_connection
 
-router = APIRouter(prefix="/api/v1/reports")
+router = APIRouter(prefix="app/routers/report")
 
 class Report(BaseModel):
     id: int
