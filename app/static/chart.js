@@ -20,6 +20,26 @@ async function loadIncidentChart() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+             scales: {
+        x: {
+            ticks: {
+                color: "#000000",
+                font: {
+                    size: 14,
+                    weight: "bold"
+                }
+            }
+        },
+        y: {
+            ticks: {
+                color: "#000000",
+                font: {
+                    size: 14,
+                    weight: "bold"
+                }
+            }
+        }
+    },
             plugins: {
                 legend: {
                     position: "top"
@@ -53,6 +73,26 @@ async function loadTimelineChart() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+             scales: {
+        x: {
+            ticks: {
+                color: "#000000",
+                font: {
+                    size: 12,
+                    weight: "bold"
+                }
+            }
+        },
+        y: {
+            ticks: {
+                color: "#000000",
+                font: {
+                    size: 14,
+                    weight: "bold"
+                }
+            }
+        }
+    },
             plugins: {
                 legend: {
                     position: "top"
