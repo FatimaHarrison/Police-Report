@@ -1,12 +1,14 @@
 import sqlite3
 
-DB_NAME = "police.db"
+DB_PATH = "police.db"   # your actual DB file
 
-def get_db():
-    return sqlite3.connect(DB_NAME)
+def get_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def create_tables():
-    conn = get_db()
+    conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("""
@@ -22,4 +24,5 @@ def create_tables():
     conn.commit()
     conn.close()
 
+# Optional: auto-create tables on startup
 create_tables()
