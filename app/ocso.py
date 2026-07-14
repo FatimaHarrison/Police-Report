@@ -1,29 +1,25 @@
 import requests
-from bs4 import BeautifulSoup
 from app.crud import insert_report
 from app.database import create_tables
 
 URL = "https://www.ocso.com/wp-admin/admin-ajax.php?action=get_active_calls"
 
 def scrape_ocso():
-    print("Scraping OCSO...")
+    print("Scraping OCSO (JSON API)...")
     create_tables()
 
     response = requests.get(URL)
-    soup = BeautifulSoup(response.text, "html.parser")
+    data = response.json()
 
-    rows = soup.select("table tbody tr")
+    # The JSON contains a list of active calls
+    calls = data.get("data", [])
 
-    for row in rows:
-        cols = row.find_all("td")
-        if len(cols) < 4:
-            continue
-
-        type_ = cols[0].get_text(strip=True)
-        location = cols[1].get_text(strip=True)
-        description = cols[2].get_text(strip=True)
-        created_at = cols[3].get_text(strip=True)
+    for call in calls:
+        type_ = call.get("call_type", "Unknown")
+        location = call.get("location", "Unknown")
+        description = call.get("description", "")
+        created_at = call.get("date_time", "")
 
         insert_report(type_, location, description, created_at)
 
-    print("Scrape complete.")
+    print(f"Scrape complete. Inserted {len(calls)} reports.")
