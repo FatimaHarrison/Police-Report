@@ -1,14 +1,13 @@
 import requests
-
 from app.crud import insert_report
 from app.database import create_tables
 
-
 URL = "https://www.ocso.com/wp-admin/admin-ajax.php?action=get_active_calls"
-DB_PATH = "/var/data/police.db"
 
 def scrape_ocso():
     print("Scraping OCSO JSON API...")
+
+    # This creates /var/data/police.db if it does not exist
     create_tables()
 
     headers = {
@@ -17,8 +16,9 @@ def scrape_ocso():
     }
 
     response = requests.get(URL, headers=headers, timeout=15)
-    data = response.json()
+    response.raise_for_status()
 
+    data = response.json()
     calls = data.get("data", [])
 
     for call in calls:
@@ -30,4 +30,3 @@ def scrape_ocso():
         insert_report(type_, location, description, created_at)
 
     print(f"Scrape complete. Inserted {len(calls)} reports.")
-
