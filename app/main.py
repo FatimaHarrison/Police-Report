@@ -10,11 +10,11 @@ from app.database import get_connection
 
 app = FastAPI()
 
-# Mount static folder for chart.html and charts.js
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
-# Include your reports router
+# Include your reports router FIRST
 app.include_router(reports_router)
+
+# Mount static folder AFTER routers
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Homepage → redirect to reports page
 @app.get("/")
