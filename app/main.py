@@ -5,33 +5,11 @@ from fastapi.staticfiles import StaticFiles
 from app.routers.reports import router as reports_router
 # Database connection (used by stats endpoints)
 from app.database import get_connection
-from app.database import create_tables
 
 app = FastAPI()
 
 # Include your reports router FIRST
 app.include_router(reports_router)
-
-@app.get("/init-db")
-def init_db():
-    create_tables()
-    return {"status": "database and tables created"}
-
-
-@app.get("/debug-db")
-def debug_db():
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        tables = cur.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'"
-        ).fetchall()
-        rows = cur.execute(
-            "SELECT * FROM reports LIMIT 5"
-        ).fetchall()
-        return {"tables": tables, "rows": rows}
-    except Exception as e:
-        return {"error": str(e)}
 
 # Mount static folder AFTER routers
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

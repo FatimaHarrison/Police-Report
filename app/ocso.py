@@ -7,7 +7,7 @@ URL = "https://www.ocso.com/wp-admin/admin-ajax.php?action=get_active_calls"
 def scrape_ocso():
     print("Scraping OCSO JSON API...")
 
-    # This creates /var/data/police.db if it does not exist
+    # Create the database + tables if they don't exist
     create_tables()
 
     headers = {
