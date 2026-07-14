@@ -1,12 +1,17 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from typing import List
 from pydantic import BaseModel
+from fastapi.responses import HTMLResponse
+
 from app.schemas import ReportCreate
 from app import crud
-from fastapi.responses import HTMLResponse
+from app.database import get_connection
 
 router = APIRouter()
 
+# -----------------------------
+# Pydantic Response Model
+# -----------------------------
 class Report(BaseModel):
     id: int
     type: str
@@ -14,25 +19,17 @@ class Report(BaseModel):
     description: str
     created_at: str
 
+
+# -----------------------------
+# HTML VIEW WITH PAGINATION
+# -----------------------------
 @router.get("/view", response_class=HTMLResponse)
 def view_reports(limit: int = 10, offset: int = 0):
-
-    # -------------------------
-    # DATA
-    # -------------------------
     reports = crud.get_all_reports(limit=limit, offset=offset)
     total = crud.count_reports()
     current_page = offset // limit + 1
     total_pages = (total + limit - 1) // limit
 
-    
-    if offset >= total:
-        offset = 0
-        reports = crud.get_all_reports(limit=limit, offset=offset)
-
-    # -------------------------
-    # HTML HEADER + STYLES
-    # -------------------------
     html = """
     <html>
     <head>
@@ -41,15 +38,17 @@ def view_reports(limit: int = 10, offset: int = 0):
             body { font-family: Times New Roman; padding: 20px; background: #27B0F5; margin: 0;}
             .report { background: #A9C3D1; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
             .type { font-size: 20px; font-weight: bold; color: #37B320; margin-bottom: 10px;}
+            .time { font-size: 15px; color: #134008; margin-top: 10px;}
             .meta { color: #080B40; margin-top: 5px; font-family: Times New Roman;}
-             h1 { text-align: center; margin-bottom: 30px; color: #333; }
+            .container { max-width: 900px; margin: center; }
+            h1 { text-align: center; margin-bottom: 30px; color: #333; }
             .pagination { text-align: center; margin-top: 30px; }
             .pagination a {
                 display: inline-block;
                 padding: 8px 14px;
                 margin: 3px;
                 border: 1px solid #ccc;
-                background: #ffc400;
+                background: #0F282E;
                 color: #333;
                 text-decoration: none;
                 border-radius: 4px;
@@ -66,27 +65,9 @@ def view_reports(limit: int = 10, offset: int = 0):
         </style>
     </head>
     <body>
-
-    <div style="text-align:center; margin-bottom:20px;">
-        <a href="/static/chart.html"
-           style="display:inline-block;
-                  padding:10px 20px;
-                  background:#ffc400;
-                  color:#000;
-                  text-decoration:none;
-                  border-radius:6px;
-                  font-weight:bold;
-                  font-family:Times New Roman;">
-            View Charts
-        </a>
-    </div>
-
-    <h1>O-County Service Reports</h1>
+        <h1>O-County Service Reports</h1>
     """
 
-    # -------------------------
-    # REPORT CARDS
-    # -------------------------
     for r in reports:
         html += f"""
         <div class="report">
@@ -97,39 +78,132 @@ def view_reports(limit: int = 10, offset: int = 0):
         </div>
         """
 
-    # -------------------------
-    # PAGINATION (6-page limit)
-    # -------------------------
+    # Pagination
     html += '<div class="pagination">'
 
-    # Beginning
-    html += f'<a href="/api/v1/reports/view?limit={limit}&offset=0">Beginning</a>'
+    first_offset = 0
+    html += f'<a href="/api/v1/reports/view?limit={limit}&offset={first_offset}">Beginning</a>'
 
-    # Back
     prev_offset = max(0, offset - limit)
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset={prev_offset}">Back</a>'
 
-    # Page numbers (max 6)
-    max_pages = 6
-    start_page = max(1, current_page - max_pages // 2)
-    end_page = min(total_pages, start_page + max_pages - 1)
-
-    for page in range(start_page, end_page + 1):
+    for page in range(1, total_pages + 1):
         page_offset = (page - 1) * limit
         class_name = "current" if page == current_page else ""
         html += f'<a class="{class_name}" href="/api/v1/reports/view?limit={limit}&offset={page_offset}">{page}</a>'
 
-    # Next
     next_offset = offset + limit
     if next_offset >= total:
-        html += '<a class="disabled">Next</a>'
+        html += f'<a class="disabled">Next</a>'
     else:
-        html += f'<a href="/api/v1/reports/view?limit={limit}&offset={next_offset}">Next</a>'
+        html += f'<a href="/api/v1/reports/view?limit={limit}&offset={next_offset}">Forward</a>'
 
-    # Last
     last_offset = (total_pages - 1) * limit
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset={last_offset}">Last</a>'
 
     html += "</div></body></html>"
 
     return html
+
+
+# -----------------------------
+# CRUD ENDPOINTS
+# -----------------------------
+@router.post("/", response_model=Report)
+def create_report(report: ReportCreate):
+    created = crud.create_report(report)
+    return created
+
+
+@router.get("/", response_model=List[Report])
+def get_reports(limit: int = 10, offset: int = 0):
+    return crud.get_all_reports(limit=limit, offset=offset)
+
+
+@router.get("/{report_id}", response_model=Report)
+def get_report(report_id: int):
+    report = crud.get_report_by_id(report_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return report
+
+
+@router.put("/{report_id}", response_model=Report)
+def update_report_endpoint(report_id: int, report: ReportCreate):
+    updated = crud.update_report(report_id, report)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return updated
+
+
+@router.delete("/{report_id}")
+def delete_report_endpoint(report_id: int):
+    deleted = crud.delete_report(report_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return {"status": "deleted"}
+
+
+# -----------------------------
+# NEW: DATE FILTER ENDPOINT
+# -----------------------------
+@router.get("/filter/date", response_model=List[Report])
+def filter_by_date(date: str = Query(..., description="Format: YYYY-MM-DD")):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, type, location, description, created_at
+        FROM reports
+        WHERE DATE(created_at) = DATE(?)
+        ORDER BY created_at DESC
+    """, (date,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [dict(r) for r in rows]
+
+
+# -----------------------------
+# NEW: BAR CHART DATA (incident counts)
+# -----------------------------
+@router.get("/stats/incident-counts")
+def incident_counts(date: str):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT type, COUNT(*) AS count
+        FROM reports
+        WHERE DATE(created_at) = DATE(?)
+        GROUP BY type
+        ORDER BY count DESC
+    """, (date,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [dict(r) for r in rows]
+
+
+# -----------------------------
+# NEW: LINE CHART DATA (timeline)
+# -----------------------------
+@router.get("/stats/timeline")
+def timeline(date: str):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT strftime('%H:%M', created_at) AS time, COUNT(*) AS count
+        FROM reports
+        WHERE DATE(created_at) = DATE(?)
+        GROUP BY time
+        ORDER BY time ASC
+    """, (date,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [dict(r) for r in rows]
