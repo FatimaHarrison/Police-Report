@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import HTMLResponse
 from typing import List
 from pydantic import BaseModel
+from app.schemas import ReportCreate
 from app import crud
-from app.database import get_connection
-
-router = APIRouter(prefix="app/routers/report")
-
+from fastapi.responses import HTMLResponse
+#Router connection 
+router = APIRouter()
+# Pydantic response Model
 class Report(BaseModel):
     id: int
     type: str
@@ -18,7 +18,6 @@ class Report(BaseModel):
 def view_reports(limit: int = 10, offset: int = 0):
     reports = crud.get_all_reports(limit=limit, offset=offset)
     total = crud.count_reports()
-
     current_page = offset // limit + 1
     total_pages = (total + limit - 1) // limit
 
@@ -72,7 +71,7 @@ def view_reports(limit: int = 10, offset: int = 0):
 
     <h1>O-County Service Reports</h1>
     """
-
+    #Report section on to the frontend
     for r in reports:
         html += f"""
         <div class="report">
@@ -84,26 +83,31 @@ def view_reports(limit: int = 10, offset: int = 0):
         """
 
     html += '<div class="pagination">'
-
+    
+    #Beginning
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset=0">Beginning</a>'
-
+    
+    #Previous page
     prev_offset = max(0, offset - limit)
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset={prev_offset}">Back</a>'
-
+    
+    #Total of pages to reach
     max_pages = 6
     end_page = min(total_pages, max_pages)
-
+    
+    #Show the page numbers
     for page in range(1, end_page + 1):
         page_offset = (page - 1) * limit
         class_name = "current" if page == current_page else ""
         html += f'<a class="{class_name}" href="/api/v1/reports/view?limit={limit}&offset={page_offset}">{page}</a>'
-
+    
+    #Next page 
     next_offset = offset + limit
     if next_offset >= total:
         html += f'<a class="disabled">Next</a>'
     else:
         html += f'<a href="/api/v1/reports/view?limit={limit}&offset={next_offset}">Next</a>'
-
+    #Last page section
     last_offset = (total_pages - 1) * limit
     html += f'<a href="/api/v1/reports/view?limit={limit}&offset={last_offset}">Last</a>'
 
