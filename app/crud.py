@@ -2,7 +2,7 @@
 #to import a creating report. 
 import sqlite3
 from app.schemas import ReportCreate
-from app.database import get_connection
+
 
 # Method to use for to help the database. 
 def get_connection():
